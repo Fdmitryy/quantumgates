@@ -181,17 +181,50 @@ func (t *T) Transform(input []complex128) ([]complex128, error) {
 }
 
 // Transform method transforms input qubit
-func (c *CNOT) Transform(input []complex128) ([]complex128, error) {
-	if len(input) != 4 {
-		return nil, fmt.Errorf("input array size must be equal 4")
+func (cn *CNOT) Transform(controller,
+	input []complex128) ([]complex128, []complex128, error) {
+
+	if len(controller) != 2 || len(input) != 2 {
+		return nil, nil, fmt.Errorf("controller and input arrays size must be equal 2")
 	}
 
-	res := make([]complex128, 4)
-
-	for index := range res {
-		column := c.matrix[index]
-		res[index] = input[0]*column[0] + input[1]*column[1]
+	united := []complex128{
+		controller[0] * input[0],
+		controller[0] * input[1],
+		controller[1] * input[0],
+		controller[1] * input[1],
 	}
 
-	return res, nil
+	unitedRes := make([]complex128, 4)
+
+	for index := range unitedRes {
+		column := cn.matrix[index]
+		unitedRes[index] = united[0]*column[0] + united[1]*column[1] +
+			united[2]*column[2] + united[3]*column[3]
+	}
+
+	a := cmplx.Sqrt(cmplx.Pow(unitedRes[0], 2) + cmplx.Pow(unitedRes[1], 2))
+	b := cmplx.Sqrt(cmplx.Pow(unitedRes[2], 2) + cmplx.Pow(unitedRes[3], 2))
+
+	var c, d complex128
+
+	if b != 0 {
+		c = unitedRes[2] / b
+		d = unitedRes[3] / b
+	} else if a != 0 {
+		c = unitedRes[0] / a
+		d = unitedRes[1] / a
+	} else {
+		if controller[0] != 1 {
+			c = input[1]
+			d = input[0]
+		} else {
+			c = input[0]
+			d = input[1]
+		}
+	}
+
+	res := []complex128{c, d}
+
+	return controller, res, nil
 }
