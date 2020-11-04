@@ -83,7 +83,7 @@ func NewT() *T {
 	return &T{
 		matrix: [][]complex128{
 			[]complex128{1, 0},
-			[]complex128{0, cmplx.Exp(1i * math.Pi / 4)},
+			[]complex128{0, cmplx.Sqrt(1i)},
 		},
 	}
 }
